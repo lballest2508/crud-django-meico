@@ -1,50 +1,41 @@
-from apps.catalog.models import Category, Product
+from decimal import Decimal
+
 from rest_framework import serializers
-from django.core.validators import MinValueValidator
+
+from apps.catalog.models import Category, Product
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """
-    Serializer for the Category model.
-    """
+    """Serializer for the Category model."""
+
     class Meta:
-        """
-        Meta class for the CategorySerializer.
-        """
         model = Category
-        fields = '__all__'
+        fields = "__all__"
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    """Serializer for the Product model.
+
+    Returns nested Category on reads; accepts category_id integer on writes.
     """
-    Serializer for the Product model.
-    """
+
     category = CategorySerializer(read_only=True)
     category_id = serializers.PrimaryKeyRelatedField(
         queryset=Category.objects.all(),
-        source='category',
-        write_only=True
+        source="category",
+        write_only=True,
+        allow_null=True,
+        required=False,
     )
 
     class Meta:
-        """
-        Meta class for the ProductSerializer.
-        """
         model = Product
-        fields = '__all__'
+        fields = "__all__"
 
-
-class ProductCreateSerializer(serializers.ModelSerializer):
-    """
-    Serializer for creating a Product instance.
-    """
-    price = serializers.DecimalField(
-        max_digits=10, decimal_places=2, validators=[MinValueValidator(0)])
-
-    class Meta:
-        """
-        Meta class for the ProductCreateSerializer.
-        """
-        model = Product
-        fields = ['name', 'description', 'price',
-                  'stock', 'category', 'is_active']
+    def validate_price(self, value: Decimal) -> Decimal:
+        """Price must be strictly greater than zero."""
+        if value <= Decimal("0.00"):
+            raise serializers.ValidationError(
+                "El precio debe ser mayor que cero."
+            )
+        return value

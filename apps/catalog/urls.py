@@ -1,12 +1,9 @@
-from django.urls import path
-from .api.viewsets import ProductViewSet, ProductCreateViewSet, CategoryViewSet
+from rest_framework.routers import DefaultRouter
 
+from apps.catalog.api.viewsets import CategoryViewSet, ProductViewSet
 
-urlpatterns = [
-    path('products/',
-         ProductViewSet.as_view({'get': 'list', 'post': 'create'}), name='product-list'),
-    path('products/create/',
-         ProductCreateViewSet.as_view({'post': 'create'}), name='product-create'),
-    path('categories/',
-         CategoryViewSet.as_view({'get': 'list', 'post': 'create'}), name='category-list'),
-]
+router = DefaultRouter()
+router.register("products", ProductViewSet, basename="product")
+router.register("categories", CategoryViewSet, basename="category")
+
+urlpatterns = router.urls
